@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient as createServerClient } from '@/utils/supabase/server'
 import { supabase } from '@/lib/supabase'
+import VoteButtons from '@/components/VoteButtons'
 
 export default async function JokesPage() {
   const authClient = await createServerClient()
@@ -32,6 +33,7 @@ export default async function JokesPage() {
             {joke.author && (
               <p className="text-sm text-gray-500 mt-2">— {joke.author}</p>
             )}
+            <VoteButtons captionId={joke.id} isLoggedIn={!!user} />
           </li>
         ))}
       </ul>
