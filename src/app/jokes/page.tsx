@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient as createServerClient } from '@/utils/supabase/server'
 import { supabase } from '@/lib/supabase'
 import VoteButtons from '@/components/VoteButtons'
+import LogoutButton from '@/components/LogoutButton'
 
 export default async function JokesPage() {
   const authClient = await createServerClient()
@@ -22,12 +23,17 @@ export default async function JokesPage() {
 
   const { data: votes } = await supabase
     .from('caption_votes')
-    .select('caption_id, vote_type')
+    .select('caption_id, vote_type, user_id')
 
   const upvoteCounts: Record<number, number> = {}
+  const userVotes: Record<number, 'up' | 'down'> = {}
+
   votes?.forEach((v) => {
     if (v.vote_type === 'up') {
       upvoteCounts[v.caption_id] = (upvoteCounts[v.caption_id] || 0) + 1
+    }
+    if (v.user_id === user.id) {
+      userVotes[v.caption_id] = v.vote_type
     }
   })
 
@@ -35,7 +41,10 @@ export default async function JokesPage() {
     <div className="p-8 max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Jokes</h1>
-        <span className="text-sm text-gray-500">{user.email}</span>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-500">{user.email}</span>
+          <LogoutButton />
+        </div>
       </div>
       <ul className="space-y-4">
         {jokes?.map((joke) => (
@@ -48,7 +57,11 @@ export default async function JokesPage() {
               {upvoteCounts[joke.id] || 0} upvote
               {upvoteCounts[joke.id] === 1 ? '' : 's'}
             </p>
-            <VoteButtons captionId={joke.id} isLoggedIn={!!user} />
+            <VoteButtons
+              captionId={joke.id}
+              isLoggedIn={!!user}
+              userVote={userVotes[joke.id] ?? null}
+            />
           </li>
         ))}
       </ul>
