@@ -20,6 +20,17 @@ export default async function JokesPage() {
     return <div className="p-8">Error loading jokes: {error.message}</div>
   }
 
+  const { data: votes } = await supabase
+    .from('caption_votes')
+    .select('caption_id, vote_type')
+
+  const upvoteCounts: Record<number, number> = {}
+  votes?.forEach((v) => {
+    if (v.vote_type === 'up') {
+      upvoteCounts[v.caption_id] = (upvoteCounts[v.caption_id] || 0) + 1
+    }
+  })
+
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -33,6 +44,10 @@ export default async function JokesPage() {
             {joke.author && (
               <p className="text-sm text-gray-500 mt-2">— {joke.author}</p>
             )}
+            <p className="text-sm text-gray-600 mt-2">
+              {upvoteCounts[joke.id] || 0} upvote
+              {upvoteCounts[joke.id] === 1 ? '' : 's'}
+            </p>
             <VoteButtons captionId={joke.id} isLoggedIn={!!user} />
           </li>
         ))}
