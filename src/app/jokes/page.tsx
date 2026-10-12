@@ -3,6 +3,7 @@ import { createClient as createServerClient } from '@/utils/supabase/server'
 import { supabase } from '@/lib/supabase'
 import VoteButtons from '@/components/VoteButtons'
 import LogoutButton from '@/components/LogoutButton'
+import GenerateJoke from '@/components/GenerateJoke'
 
 export default async function JokesPage() {
   const authClient = await createServerClient()
@@ -15,7 +16,10 @@ export default async function JokesPage() {
     redirect('/login')
   }
 
-  const { data: jokes, error } = await supabase.from('jokes').select('*')
+  const { data: jokes, error } = await supabase
+    .from('jokes')
+    .select('*')
+    .order('created_at', { ascending: false })
 
   if (error) {
     return <div className="p-8">Error loading jokes: {error.message}</div>
@@ -46,10 +50,18 @@ export default async function JokesPage() {
           <LogoutButton />
         </div>
       </div>
+
+      <GenerateJoke />
+
       <ul className="space-y-4">
         {jokes?.map((joke) => (
           <li key={joke.id} className="border rounded-lg p-4 shadow-sm">
-            <p className="text-lg">{joke.text}</p>
+            {joke.author === 'Gemini' && (
+              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                ✨ AI-generated
+              </span>
+            )}
+            <p className="text-lg mt-1">{joke.text}</p>
             {joke.author && (
               <p className="text-sm text-gray-500 mt-2">— {joke.author}</p>
             )}
@@ -68,3 +80,4 @@ export default async function JokesPage() {
     </div>
   )
 }
+export const maxDuration = 60
